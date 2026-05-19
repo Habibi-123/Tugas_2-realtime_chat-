@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Chat Room</title>
-
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Group Room</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
+
         body{
             font-family: Arial;
             background: #ece5dd;
@@ -18,35 +17,24 @@
             background: white;
             padding: 20px;
             border-radius: 10px;
-            max-width: 600px;
+            max-width: 700px;
             margin: auto;
             height: 500px;
             overflow-y: auto;
         }
 
         .message{
+            background: #f1f1f1;
             padding: 10px;
             margin: 10px 0;
             border-radius: 10px;
-            width: fit-content;
-            max-width: 70%;
-        }
-
-        .me{
-            background: #dcf8c6;
-            margin-left: auto;
-            text-align: right;
-        }
-
-        .other{
-            background: #f1f1f1;
         }
 
         form{
             margin-top: 20px;
             display: flex;
             gap: 10px;
-            max-width: 600px;
+            max-width: 700px;
             margin-left: auto;
             margin-right: auto;
         }
@@ -60,6 +48,7 @@
             padding: 10px 20px;
             cursor: pointer;
         }
+
     </style>
 </head>
 
@@ -67,16 +56,18 @@
 
 <div class="chat-box" id="chat-box">
 
-    <h2>Chat dengan {{ $user->name }}</h2>
+    <h2>
+        Group: {{ $group->name }}
+    </h2>
 
     <hr>
 
     @foreach($messages as $msg)
 
-        <div class="message {{ $msg->sender_id == auth()->id() ? 'me' : 'other' }}">
+        <div class="message">
 
             <b>
-                {{ $msg->sender_id == auth()->id() ? 'You' : $user->name }}
+                {{ $msg->user->name }}
             </b>
 
             <br>
@@ -89,11 +80,11 @@
 
 </div>
 
-<form action="{{ route('chat.send') }}" method="POST">
+<form action="{{ route('groups.send') }}" method="POST">
 
     @csrf
 
-    <input type="hidden" name="receiver_id" value="{{ $user->id }}">
+    <input type="hidden" name="group_id" value="{{ $group->id }}">
 
     <input type="text" name="message" placeholder="Tulis pesan..." required>
 
@@ -106,23 +97,23 @@
 
 document.addEventListener("DOMContentLoaded", function () {
 
-    console.log("Realtime aktif");
+    console.log("Realtime group aktif");
 
-    Echo.private('chat.{{ auth()->id() }}')
-    .listen('.message.sent', (e) => {
+    Echo.channel('group.{{ $group->id }}')
+    .listen('.group.message', (e) => {
 
-        console.log("Pesan diterima:", e);
+        console.log(e);
 
         let box = document.getElementById('chat-box');
 
         let html = `
-            <div class="message other">
+            <div class="message">
 
-                <b>${e.sender_name}</b>
+                <b>${e.message.user.name}</b>
 
                 <br>
 
-                ${e.message}
+                ${e.message.message}
 
             </div>
         `;
@@ -132,20 +123,9 @@ document.addEventListener("DOMContentLoaded", function () {
         box.scrollTop = box.scrollHeight;
     });
 
-    setInterval(() => {
-
-        fetch('/heartbeat', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Content-Type': 'application/json'
-            }
-        });
-
-    }, 5000);
-
 });
 
 </script>
+
 </body>
 </html>

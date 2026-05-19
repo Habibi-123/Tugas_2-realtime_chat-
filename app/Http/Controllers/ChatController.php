@@ -12,7 +12,7 @@ class ChatController extends Controller
 {
     public function index()
     {
-         Auth::user()->update([
+        Auth::user()->update([
             'last_seen' => now()
         ]);
 
@@ -26,14 +26,16 @@ class ChatController extends Controller
         $user = User::findOrFail($id);
 
         $messages = Message::where(function ($query) use ($id) {
+
             $query->where('sender_id', Auth::id())
                   ->where('receiver_id', $id);
-        })
-        ->orWhere(function ($query) use ($id) {
+
+        })->orWhere(function ($query) use ($id) {
+
             $query->where('sender_id', $id)
                   ->where('receiver_id', Auth::id());
-        })
-        ->get();
+
+        })->get();
 
         return view('chat.room', compact('user', 'messages'));
     }
@@ -41,9 +43,9 @@ class ChatController extends Controller
     public function send(Request $request)
     {
         $message = Message::create([
-        'sender_id' => Auth::id(),
-        'receiver_id' => $request->receiver_id,
-        'message' => $request->message
+            'sender_id' => Auth::id(),
+            'receiver_id' => $request->receiver_id,
+            'message' => $request->message
         ]);
 
         broadcast(new MessageSent($message))->toOthers();

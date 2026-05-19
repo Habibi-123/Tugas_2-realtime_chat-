@@ -5,16 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 
-class Message extends Model
+class GroupMessage extends Model
 {
     protected $fillable = [
-        'sender_id',
-        'receiver_id',
+        'group_id',
+        'user_id',
         'message'
     ];
 
-    public function sender()
+    public function user()
     {
-        return $this->belongsTo(User::class, 'sender_id');
+        return $this->belongsTo(User::class);
     }
 }
